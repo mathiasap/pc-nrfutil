@@ -44,6 +44,14 @@ import click
 import time
 import logging
 import subprocess
+
+currentWD = os.path.abspath(os.curdir)
+os.chdir("..")
+sys.path.insert(0, os.getcwd())
+os.chdir(currentWD)
+print(os.getcwd())
+print(sys.path)
+
 sys.path.append(os.getcwd())
 
 from nordicsemi.dfu.bl_dfu_sett import BLDFUSettings

@@ -50,6 +50,37 @@ from setuptools.command.test import test as TestCommand
 
 from nordicsemi import version
 
+package_install_name = 'nrfutil'
+
+
+try:
+
+    #    If the version that is being installed is older than the one currently installed, its installed module is renamed to prevent conflicts.
+    #    nrfutil-legacy-{version} (example: nrfutil-legacy-3.4.0)
+
+    import pip
+    installed_packages = pip.get_installed_distributions()
+    flat_installed_packages = [package.project_name for package in installed_packages]
+    package = installed_packages[flat_installed_packages.index('nrfutil')]
+    installed_versions = [int(i) for i in package.version.split(".")]
+    new_versions = [int(i) for i in version.NRFUTIL_VERSION.split(".")]
+    legacyVersion = False
+    for v1, v2 in zip(installed_versions, new_versions):
+        if v1 == v2:
+            continue
+        if v2 < v1:
+            legacyVersion = True
+        break
+
+    if legacyVersion:
+        package_install_name += "-legacy-{}".format(version.NRFUTIL_VERSION)
+
+except ImportError:
+    pass # Pip not installed.
+except:
+    pass # Nrfutil is probably not installed already
+
+
 excludes = ["Tkconstants",
             "Tkinter",
             "tcl",
@@ -90,7 +121,7 @@ class NoseTestCommand(TestCommand):
         nose.run_exit(argv=['nosetests', '--with-xunit', '--xunit-file=test-reports/unittests.xml'])
 
 setup(
-    name="nrfutil",
+    name=package_install_name,
     version=version.NRFUTIL_VERSION,
     license="Modified BSD License",
     author = "Nordic Semiconductor ASA",
@@ -131,10 +162,10 @@ setup(
     },
     entry_points='''
       [console_scripts]
-      nrfutil = nordicsemi.__main__:cli
-    ''',
+      %s = nordicsemi.__main__:cli
+    '''%(package_install_name),
     console=[{
         "script": "./nordicsemi/__main__.py",
-        "dest_base": "nrfutil"
+        "dest_base": package_install_name
     }],
 )
